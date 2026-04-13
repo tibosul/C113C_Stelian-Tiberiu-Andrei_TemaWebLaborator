@@ -21,15 +21,18 @@ export interface User {
   username: string;
   phone: string;
   country: string;
+  cash_balance?: string;
+  buying_power?: string;
 }
 
 // Ce ține AuthContext-ul
 export interface AuthContextType {
   user: User | null;
-  // token: string | null; -- will use later when backend is ready, for now we just check localStorage directly in context
-  // isAuthenticated: boolean; -- 
+  token: string | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   login: (email_or_username: string, password: string) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => void;
   error: string | null;
 }

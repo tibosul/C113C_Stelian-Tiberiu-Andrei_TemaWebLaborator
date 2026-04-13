@@ -2,7 +2,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import LandingPage from './pages/LandingPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 
 /**
  * APP.TSX - Componenta principală cu rute
@@ -14,12 +16,15 @@ import ProtectedRoute from './components/ProtectedRoute';
  * - <ProtectedRoute> înconjoară paginile care necesită autentificare
  */
 
-function App() {
+export default function App() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <Routes>
       {/* Rute publice - accesibile fără autentificare */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
 
       {/* Rute protejate - necesită autentificare */}
       <Route
@@ -31,13 +36,9 @@ function App() {
         }
       />
 
-      {/* Redirect de la / către /login */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
       {/* Rută 404 - orice alt URL */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
-export default App;

@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { validateRegisterForm, isValidUsername } from '../utils/validators';
 import { countries } from '../types/country';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * PAGINA DE ÎNREGISTRARE
@@ -23,6 +24,7 @@ export default function RegisterPage() {
   const [localError, setLocalError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   /**
@@ -70,24 +72,8 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // MOCK REGISTER FOR FRONTEND TESTING
-      console.log('Mock register with:', formData);
-      
-      const mockUser = {
-        id: '2',
-        email: formData.email,
-        username: formData.username,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: '',
-        country: formData.country
-      };
-
-      localStorage.setItem('auth_token', 'mock_token_456');
-      localStorage.setItem('auth_user', JSON.stringify(mockUser));
-
-      // Redirect or reload
-      window.location.href = '/dashboard';
+      await register(formData);
+      navigate('/dashboard');
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

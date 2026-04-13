@@ -1,71 +1,86 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthContextType, LoginRequest } from '../types/auth';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { User, AuthContextType } from '../types/auth';
+import { api } from '../utils/api';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-
-// Creăm contextul cu valori default
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Provider-ul - componenta care "învelește" aplicația și oferă acces la auth
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token') || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // La încărcarea aplicației, verificăm dacă există token în localStorage
+  // Load user data on app mount if token exists
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('auth_user');
+    const fetchUser = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const response = await api.get('/auth/me');
+        setUser(response.data.user);
+      } catch (err: any) {
+        console.error('Failed to authenticate:', err.response?.data?.error || err.message);
+        logout(); // Force clean up if token is invalid
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
+    fetchUser();
+  }, [token]);
 
-  // Funcția de login - face fetch la backend
   const login = async (email_or_username: string, password: string) => {
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email_or_username, password } as LoginRequest),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      // Salvăm token-ul și user-ul
-      setToken(data.token);
-      setUser(data.user);
-
-      // Persistăm în localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      throw err; // Aruncăm eroarea mai departe ca să o prindă componenta
+      const response = await api.post('/auth/login', { email_or_username, password });
+      const { token: receivedToken, user: receivedUser } = response.data;
+      
+      setToken(receivedToken);
+      setUser(receivedUser);
+      localStorage.setItem('auth_token', receivedToken);
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Login failed';
+      setError(msg);
+      throw new Error(msg);
     }
   };
 
-  // Funcția de logout - șterge datele
+  const register = async (userData: any) => {
+    setError(null);
+    try {
+      // transform `first_name` and `last_name` payload mapping if needed
+      const payload = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        country_code: userData.country
+      };
+      const response = await api.post('/auth/register', payload);
+      const { token: receivedToken, user: receivedUser } = response.data;
+      
+      setToken(receivedToken);
+      setUser(receivedUser);
+      localStorage.setItem('auth_token', receivedToken);
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Registration failed';
+      setError(msg);
+      throw new Error(msg);
+    }
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
   };
 
   const value: AuthContextType = {
@@ -74,6 +89,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated: !!user,
     isLoading,
     login,
+    register,
     logout,
     error,
   };

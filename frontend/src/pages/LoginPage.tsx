@@ -40,26 +40,9 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // MOCK LOGIN FOR FRONTEND TESTING
-      console.log('Mock login with:', { identifier, password });
-      
-      const mockUser = {
-        id: '1',
-        email: identifier.includes('@') ? identifier : 'mock@example.com',
-        username: identifier.includes('@') ? 'mockuser' : identifier,
-        first_name: 'Mock',
-        last_name: 'User',
-        phone: '',
-        country: 'RO'
-      };
-
-      localStorage.setItem('auth_token', 'mock_token_123');
-      localStorage.setItem('auth_user', JSON.stringify(mockUser));
-      
-      // Update context state manually since we are bypassing the real login function
-      window.location.reload(); // Quick way to refresh context from localStorage
-      
-      // navigate("/dashboard"); // This might be redundant if reload is used
+      await login(identifier, password);
+      // Let the backend dictate where to go (or AuthContext user effect)
+      navigate("/dashboard");
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Login failed");
     } finally {
