@@ -1,0 +1,176 @@
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { body, validationResult } from "express-validator";
+import pool from "../config/db.js";
+import authMiddleware from "../middleware/auth.js";
+
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || "default_secret_key";
+
+// User registration endpoint
+router.post(
+  "/register",
+  [
+    body("email").isEmail().withMessage("Invalid email address"),
+    body("password")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters long"),
+    body("username")
+      .isLength({ min: 3, max: 50 })
+      .withMessage("Username must be between 3 and 50 characters long"),
+    body("firstName")
+      .isLength({ min: 1, max: 50 })
+      .withMessage("First name must be between 1 and 50 characters long"),
+    body("lastName")
+      .isLength({ min: 1, max: 50 })
+      .withMessage("Last name must be between 1 and 50 characters long"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const {
+        email,
+        password,
+        username,
+        firstName,
+        lastName,
+        phone,
+        country_code,
+      } = req.body;
+
+      const existing = await pool.query(
+        `select id from Users where email = $1 or username = $2`,
+        [email, username],
+      );
+
+      if (existing.rows.length > 0) {
+        return res
+          .status(409)
+          .json({ error: "Email or username already in use" });
+      }
+
+      const salt = await bcrypt.genSalt(12);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      const result = await pool.query(
+        `insert into Users (email, password_hash, username, first_name, last_name, phone, country_code)
+         values ($1, $2, $3, $4, $5, $6, $7)
+         returning id, email, username, first_name, last_name, phone, country_code, tier, created_at`,
+        [
+          email,
+          passwordHash,
+          username,
+          firstName,
+          lastName,
+          phone || null,
+          country_code || null,
+        ],
+      );
+
+      const user = result.rows[0];
+      const token = jwt.sign(
+        { id: user.id, email: user.email, username: user.username },
+        JWT_SECRET,
+        { expiresIn: "24h" },
+      );
+
+      res.status(201).json({ token, user });
+    } catch (err) {
+      console.error("Registration error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
+
+// User login endpoint
+router.post(
+  "/login",
+  [
+    body("email_or_username")
+      .notEmpty()
+      .withMessage("Email or username is required"),
+    body("password").notEmpty().withMessage("Password is required"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { email_or_username, password } = req.body;
+
+      const result = await pool.query(
+        `select id, email, username, first_name, last_name, phone, country_code, tier, kyc_verified, is_active, password_hash from Users where email = $1 or username = $1`,
+        [email_or_username],
+      );
+
+      if (result.rows.length === 0) {
+        return res
+          .status(401)
+          .json({ error: "Invalid email/username or password" });
+      }
+
+      const dbUser = result.rows[0];
+      if (!dbUser.is_active) {
+        return res
+          .status(403)
+          .json({ error: "Account is inactive. Please contact support." });
+      }
+
+      const validPassword = await bcrypt.compare(
+        password,
+        dbUser.password_hash,
+      );
+      if (!validPassword) {
+        return res
+          .status(401)
+          .json({ error: "Invalid email/username or password" });
+      }
+
+      await pool.query(`update Users set last_login_at = now() where id = $1`, [
+        dbUser.id,
+      ]);
+
+      const token = jwt.sign(
+        { id: dbUser.id, email: dbUser.email, username: dbUser.username },
+        JWT_SECRET,
+        { expiresIn: "24h" },
+      );
+
+      const { password_hash, ...userWithoutPassword } = dbUser;
+      res.json({ token, user: userWithoutPassword });
+    } catch (err) {
+      console.error("Login error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
+
+// Get current user endpoint
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `select id, email, username, first_name, last_name, phone, country_code,
+      tier, kyc_verified, two_fa_enabled, cash_balance, buying_power, alpaca_account_id, created_at, last_login_at
+      from Users where id = $1`,
+      [req.user.id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user: result.rows[0] });
+  } catch (err) {
+    console.error("Fetch user error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+export default router;
