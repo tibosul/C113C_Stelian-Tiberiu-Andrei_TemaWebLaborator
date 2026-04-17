@@ -32,7 +32,7 @@ PASI INSTALARE:
 3. Configurare Backend: 
    - Mergeti in directorul `backend/`.
    - Rulati `npm install`.
-   - Creati un fisier `.env` urmand exemplul de referinta (DATABASE_URL, ALPACA_KEY, etc).
+   - Fisiere .env am lasat in repository desi nu prea e safe
    - Rulati `npm start`.
 4. Configurare Frontend:
    - Mergeti in directorul `frontend/`.
