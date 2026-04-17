@@ -2,6 +2,9 @@ create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
 
 create type user_tier as enum ('basic', 'standard', 'premium', 'vip');
+create type employment_status as enum ('employed', 'self-employed', 'student', 'retired', 'unemployed', 'other');
+create type income_range as enum ('under_10k', '10k_25k', '25k_50k', '50k_100k', '100k_250k', 'over_250k');
+create type investment_experience as enum ('none', 'beginner', 'intermediate', 'experienced', 'professional');
 create type kyc_status as enum ('pending', 'submitted', 'approved', 'rejected', 'expired');
 create type kyc_doc_type as enum ('passport', 'national_id', 'drivers_licence', 'proof_of_address');
 create type asset_type as enum ('stock', 'etf', 'crypto', 'forex', 'commodity', 'index');
@@ -97,6 +100,12 @@ create table Users
     constraint chk_cash_non_negative check (cash_balance >= 0),
     constraint chk_buying_power_non_negative check (buying_power >= 0)
 );
+
+alter table users add column employment_status employment_status;
+alter table users add column income_range income_range;
+alter table users add column investment_experience investment_experience not null default 'none';
+alter table users add constraint uq_phone unique (phone);
+alter table users add column picture_url varchar(500);
 
 create index idx_users_email on Users (email);
 create index idx_users_country on Users (country_code);

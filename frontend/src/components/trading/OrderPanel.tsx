@@ -2,18 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../utils/api';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/AuthContext';
+import { ShoppingCart, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
 interface OrderPanelProps {
   symbol: string;
+  onSelect: (symbol: string) => void;
 }
 
-export default function OrderPanel({ symbol }: OrderPanelProps) {
+export default function OrderPanel({ symbol, onSelect }: OrderPanelProps) {
   const { user } = useAuth();
   const [quote, setQuote] = useState<any>(null);
   const [shares, setShares] = useState('1');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+
+  const quickPicks = [
+    { symbol: 'TSLA', name: 'Tesla Inc', price: '175.22', change: '+2.4%' },
+    { symbol: 'AAPL', name: 'Apple Inc', price: '189.45', change: '-0.8%' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp', price: '890.11', change: '+4.2%' },
+    { symbol: 'BTC', name: 'Bitcoin', price: '64,210', change: '+1.5%' },
+  ];
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -25,114 +34,133 @@ export default function OrderPanel({ symbol }: OrderPanelProps) {
         console.error(err);
       }
     };
-    
+
     fetchQuote();
-    // In a real app we would use WebSockets here for live fast updates
-    const interval = setInterval(fetchQuote, 5000);
+    const interval = setInterval(fetchQuote, 10000);
     return () => clearInterval(interval);
   }, [symbol]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shares || Number(shares) <= 0) return;
-    
+
     setIsSubmitting(true);
     setSuccessMsg('');
-    
-    // MOCK ORDER EFFECT
+
     setTimeout(() => {
       setIsSubmitting(false);
-      setSuccessMsg(`Succes! Ordin ${orderType.toUpperCase()} executat pentru ${shares} buc. ${symbol}`);
+      setSuccessMsg(`Order executed successfully!`);
       setTimeout(() => setSuccessMsg(''), 3000);
-    }, 800);
+    }, 1200);
   };
 
-  if (!quote) {
-    return <div className="p-6 text-slate-400">Încărcare preț...</div>;
-  }
-
-  const estimatedValue = Number(shares) * Number(quote.last_price || 0);
+  const estimatedValue = Number(shares) * Number(quote?.last_price || 0);
 
   return (
-    <div className="bg-slate-900 border-l border-slate-800 w-full h-full flex flex-col">
-      <div className="p-6 border-b border-slate-800">
-         <h3 className="text-xl font-bold text-white mb-1">{symbol}</h3>
-         <div className="text-3xl font-light text-white">${Number(quote.last_price || 0).toFixed(2)}</div>
-         <div className={clsx(
-           "text-sm font-medium mt-1",
-           Number(quote.change_pct) >= 0 ? "text-emerald-500" : "text-red-500"
-         )}>
-           {Number(quote.change_pct) >= 0 ? "+" : ""}{Number(quote.change_pct || 0).toFixed(2)}% Astăzi
-         </div>
+    <div className="w-[380px] h-full glass-sidebar border-l border-outline-variant/10 flex flex-col p-6 animate-in fade-in slide-in-from-right duration-700">
+      <div className="flex items-center gap-2 mb-8">
+        <ShoppingCart size={20} className="text-primary-container" />
+        <h3 className="text-sm font-manrope font-bold text-white uppercase tracking-widest">Trading</h3>
       </div>
-      
-      <div className="p-6 flex-1 flex flex-col">
-        <div className="flex bg-slate-800 p-1 rounded-lg mb-6">
-          <button 
-            className={clsx(
-              "flex-1 py-2 text-sm font-semibold rounded-md transition-all",
-              orderType === 'buy' ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"
-            )}
-            onClick={() => setOrderType('buy')}
-          >
-            CUMPĂRĂ
-          </button>
-          <button 
-            className={clsx(
-              "flex-1 py-2 text-sm font-semibold rounded-md transition-all",
-              orderType === 'sell' ? "bg-red-600 text-white shadow" : "text-slate-400 hover:text-white"
-            )}
-            onClick={() => setOrderType('sell')}
-          >
-            VINDE
-          </button>
+
+      <div className="flex bg-surface-container-low p-1 rounded-2xl mb-8 border border-outline-variant/10">
+        <button
+          className={clsx(
+            "flex-1 py-3 text-xs font-bold rounded-xl tonal-transition",
+            orderType === 'buy' ? "bg-secondary text-on-secondary shadow-lg shadow-secondary/20" : "text-on-surface-variant hover:text-white"
+          )}
+          onClick={() => setOrderType('buy')}
+        >
+          BUY
+        </button>
+        <button
+          className={clsx(
+            "flex-1 py-3 text-xs font-bold rounded-xl tonal-transition",
+            orderType === 'sell' ? "bg-error-container text-on-error-container shadow-lg shadow-error/20" : "text-on-surface-variant hover:text-white"
+          )}
+          onClick={() => setOrderType('sell')}
+        >
+          SELL
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6 flex-1">
+        <div className="p-5 bg-surface-container-high/40 rounded-3xl border border-outline-variant/10">
+          <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">Active Quantity</label>
+          <input
+            type="number"
+            min="0.0001"
+            step="0.0001"
+            value={shares}
+            onChange={(e) => setShares(e.target.value)}
+            className="w-full bg-transparent text-white font-manrope font-bold text-3xl focus:outline-none placeholder-on-surface-variant/30"
+            placeholder="0.00"
+          />
+          <div className="mt-4 pt-4 border-t border-outline-variant/5 flex justify-between items-center text-[10px] uppercase font-bold tracking-widest text-on-surface-variant">
+            <span>Estimated Value</span>
+            <span className="text-white text-sm font-manrope font-bold">${estimatedValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-           <div className="space-y-4">
-               <div>
-                  <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Cantitate (Actiuni)</label>
-                  <input 
-                    type="number"
-                    min="0.0001"
-                    step="0.0001"
-                    value={shares}
-                    onChange={(e) => setShares(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-slate-500 text-lg"
-                    placeholder="0"
-                  />
-               </div>
-               
-               <div className="bg-slate-800/50 rounded-lg p-4 flex justify-between items-center border border-slate-700/50">
-                  <span className="text-sm text-slate-400">Valoare estimată</span>
-                  <span className="text-lg font-semibold text-white">${estimatedValue.toFixed(2)}</span>
-               </div>
-               
-               <div className="flex justify-between items-center p-2">
-                 <span className="text-xs text-slate-400">Putere de cumpărare:</span>
-                 <span className="text-xs font-semibold text-white">${Number(user?.buying_power || 0).toFixed(2)}</span>
-               </div>
-           </div>
+        <div className="flex justify-between items-center px-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+          <span>Buying Power</span>
+          <span className="text-white">${Number(user?.buying_power || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+        </div>
 
-           <div className="mt-auto pt-6">
-               <button 
-                 type="submit" 
-                 disabled={isSubmitting || !shares || Number(shares) <= 0}
-                 className={clsx(
-                   "w-full py-4 rounded-xl font-bold text-lg text-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
-                   orderType === 'buy' ? "bg-emerald-600 hover:bg-emerald-500" : "bg-red-600 hover:bg-red-500"
-                 )}
-               >
-                 {isSubmitting ? "SE PROCESEAZĂ..." : `PLASEAZĂ ORDIN ${orderType.toUpperCase()}`}
-               </button>
-               
-               {successMsg && (
-                 <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-400 text-sm font-medium text-center">
-                    {successMsg}
-                 </div>
-               )}
-           </div>
-        </form>
+        <button
+          type="submit"
+          disabled={isSubmitting || !shares || Number(shares) <= 0}
+          className={clsx(
+            "w-full py-5 rounded-2xl font-manrope font-black text-sm tracking-widest transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed",
+            orderType === 'buy' ? "bg-secondary text-on-secondary hover:shadow-secondary/30" : "bg-error-container text-white hover:shadow-error/30"
+          )}
+        >
+          {isSubmitting ? "SUBMITTING ORDER..." : "REVIEW ORDER"}
+        </button>
+
+        {successMsg && (
+          <div className="p-4 bg-secondary/10 border border-secondary/20 rounded-2xl text-secondary text-xs font-bold text-center animate-in zoom-in duration-300">
+            {successMsg}
+          </div>
+        )}
+      </form>
+
+      {/* Quick Picks / Watchlist */}
+      <div className="mt-8 pt-8 border-t border-outline-variant/10">
+        <div className="flex items-center gap-2 mb-6">
+          <Star size={16} className="text-primary-teal" />
+          <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Quick Picks / Watchlist</h4>
+        </div>
+
+        <div className="space-y-4">
+          {quickPicks.map((pick) => (
+            <div
+              key={pick.symbol}
+              onClick={() => onSelect(pick.symbol)}
+              className="flex items-center justify-between group cursor-pointer tonal-transition hover:translate-x-1"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-[10px] font-black text-white group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+                  {pick.symbol[0]}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">{pick.symbol}</div>
+                  <div className="text-[9px] text-on-surface-variant">{pick.name}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs font-bold text-white">${pick.price}</div>
+                <div className={clsx(
+                  "text-[9px] font-bold flex items-center justify-end gap-0.5",
+                  pick.change.startsWith('+') ? "text-secondary" : "text-error"
+                )}>
+                  {pick.change.startsWith('+') ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                  {pick.change}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

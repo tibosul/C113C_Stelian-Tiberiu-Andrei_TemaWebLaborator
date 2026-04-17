@@ -1,18 +1,18 @@
-// Tipuri pentru autentificare și user
+// Types for authentication and user
 
-// Datele pe care le trimitem la login
+// Data sent during login
 export interface LoginRequest {
   email_or_username: string;
   password: string;
 }
 
-// Datele pe care le primim de la backend dupa login
+// Data received from backend after login
 export interface LoginResponse {
   token: string;
   user: User;
 }
 
-// Structura unui user
+// User structure
 export interface User {
   id: string;
   email: string;
@@ -20,12 +20,16 @@ export interface User {
   last_name: string;
   username: string;
   phone: string;
-  country: string;
+  country_code: string;
+  tier: string;
+  kyc_verified: boolean;
+  created_at: string;
+  is_admin: boolean;
   cash_balance?: string;
   buying_power?: string;
 }
 
-// Ce ține AuthContext-ul
+// AuthContext state
 export interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -34,5 +38,6 @@ export interface AuthContextType {
   login: (email_or_username: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
+  updateUser: (user: User) => void;
   error: string | null;
 }

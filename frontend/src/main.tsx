@@ -6,18 +6,18 @@ import './styles/index.css'
 import App from './App.tsx'
 
 /**
- * MAIN.TSX - Punctul de intrare al aplicației
+ * MAIN.TSX - Application entry point
  *
- * Structura de "învelire" (wrapping):
+ * Wrapping structure:
  *
- * StrictMode        -> Verificări de dezvoltare React
- *   BrowserRouter   -> Permite navigare cu URL-uri (fără reîncărcare)
- *     AuthProvider   -> Oferă starea de autentificare tuturor componentelor
- *       App          -> Rutele aplicației
+ * StrictMode        -> React development checks
+ *   BrowserRouter   -> Enables navigation with URLs (single-page app)
+ *     AuthProvider   -> Provides authentication state to all components
+ *       App          -> Application routes
  *
- * Ordinea contează:
- * - BrowserRouter trebuie să fie PESTE App pentru ca <Routes> să funcționeze
- * - AuthProvider trebuie să fie PESTE App pentru ca useAuth() să funcționeze oriunde
+ * Order matters:
+ * - BrowserRouter must be ABOVE App for <Routes> to work
+ * - AuthProvider must be ABOVE App for useAuth() to work anywhere
  */
 
 createRoot(document.getElementById('root')!).render(

@@ -1,4 +1,7 @@
 import Alpaca from "@alpacahq/alpaca-trade-api";
+import dotenv from "dotenv";
+dotenv.config();
+
 
 const alpaca = new Alpaca({
   keyId: process.env.ALPACA_API_KEY,

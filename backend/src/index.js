@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.js';
 import assetsRoutes from './routes/assets.js';
 import marketRoutes from './routes/market.js';
+import adminRoutes from './routes/admin.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'online', timeestamp: ne
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/assets', assetsRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
 

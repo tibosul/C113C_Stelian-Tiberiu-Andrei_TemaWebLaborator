@@ -11,11 +11,11 @@ export function useApi<T>(endpoint: string) {
     const fetchData = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}${endpoint}`);
-        if (!res.ok) throw new Error('Eroare la fetch');
+        if (!res.ok) throw new Error('Fetch error');
         const json = await res.json();
         setData(json);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Eroare necunoscută');
+        setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -28,7 +28,7 @@ export function useApi<T>(endpoint: string) {
 }
 
 export function useHealthCheck() {
-  const [status, setStatus] = useState<string>('Se conectează...');
+  const [status, setStatus] = useState<string>('Connecting...');
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/health`)

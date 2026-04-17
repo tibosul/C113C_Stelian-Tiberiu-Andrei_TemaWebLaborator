@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../utils/api';
 import clsx from 'clsx';
 import { Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Asset {
   id: string;
@@ -18,6 +19,7 @@ interface AssetListProps {
 }
 
 export default function AssetList({ onSelect, selectedSymbol }: AssetListProps) {
+  const navigate = useNavigate();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -50,7 +52,7 @@ export default function AssetList({ onSelect, selectedSymbol }: AssetListProps) 
   return (
     <div className="flex flex-col h-full bg-slate-900 border-r border-slate-800">
       <div className="p-4 border-b border-slate-800">
-        <h2 className="text-lg font-semibold text-white mb-4">Investiții</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">Investments</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
@@ -65,7 +67,7 @@ export default function AssetList({ onSelect, selectedSymbol }: AssetListProps) 
       
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="p-4 text-sm text-slate-400 text-center animate-pulse">Se încarcă piețele...</div>
+          <div className="p-4 text-sm text-slate-400 text-center animate-pulse">Loading markets...</div>
         ) : (
           <div className="flex flex-col">
             {filteredAssets.map((asset) => {
@@ -75,9 +77,12 @@ export default function AssetList({ onSelect, selectedSymbol }: AssetListProps) 
               return (
                 <button
                   key={asset.id}
-                  onClick={() => onSelect(asset.symbol)}
+                  onClick={() => {
+                    onSelect(asset.symbol);
+                    navigate(`/asset/${asset.symbol}`);
+                  }}
                   className={clsx(
-                    "flex items-center justify-between p-4 border-b border-slate-800/50 hover:bg-slate-800/80 transition-colors text-left",
+                    "flex items-center justify-between p-4 border-b border-slate-800/50 hover:bg-slate-800/80 transition-colors text-left w-full",
                     isSelected && "bg-slate-800 border-l-2 border-l-emerald-500"
                   )}
                 >
@@ -99,7 +104,7 @@ export default function AssetList({ onSelect, selectedSymbol }: AssetListProps) 
             })}
             
             {filteredAssets.length === 0 && (
-                <div className="p-6 text-center text-sm text-slate-500">Nu am găsit instrumentul.</div>
+                <div className="p-6 text-center text-sm text-slate-500">Asset not found.</div>
             )}
           </div>
         )}

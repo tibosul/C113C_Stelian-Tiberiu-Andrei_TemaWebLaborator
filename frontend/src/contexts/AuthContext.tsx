@@ -55,14 +55,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (userData: any) => {
     setError(null);
     try {
-      // transform `first_name` and `last_name` payload mapping if needed
+      // transform payload mapping and include new phone/tier fields
       const payload = {
         username: userData.username,
         email: userData.email,
         password: userData.password,
         firstName: userData.first_name,
         lastName: userData.last_name,
-        country_code: userData.country
+        country_code: userData.country,
+        phone: `${userData.phone_country_code}${userData.phone}`,
+        tier: userData.tier
       };
       const response = await api.post('/auth/register', payload);
       const { token: receivedToken, user: receivedUser } = response.data;
@@ -83,6 +85,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem('auth_token');
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -91,13 +97,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     register,
     logout,
+    updateUser,
     error,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Hook customizat pentru a folosi contextul mai ușor
+// Custom hook to use the context easily
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

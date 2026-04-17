@@ -3,14 +3,14 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * COMPONENTA PROTECTEDROUTE
+ * PROTECTED ROUTE COMPONENT
  *
- * Ce face:
- * 1. Verifică dacă userul este autentificat
- * 2. Dacă DA -> randează copiii (pagina protejată)
- * 3. Dacă NU -> redirectează către /login
+ * What it does:
+ * 1. Checks if the user is authenticated
+ * 2. If YES -> renders the children (protected page)
+ * 3. If NO -> redirects to /login
  *
- * Cum se folosește:
+ * How to use:
  * <ProtectedRoute>
  *   <DashboardPage />
  * </ProtectedRoute>
@@ -24,24 +24,24 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // În timp ce se încarcă, afișăm un spinner
+  // While loading, display a spinner
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Se încarcă...</p>
+          <p className="text-slate-400">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Dacă nu este autentificat, redirectăm la login
-  // Salvăm location-ul curent ca să putem reveni după login
+  // If not authenticated, redirect to login
+  // Save current location to return after login
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Dacă este autentificat, randăm pagina protejată
+  // If authenticated, render the protected page
   return <>{children}</>;
 }
