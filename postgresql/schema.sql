@@ -106,6 +106,7 @@ alter table users add column income_range income_range;
 alter table users add column investment_experience investment_experience not null default 'none';
 alter table users add constraint uq_phone unique (phone);
 alter table users add column picture_url varchar(500);
+alter table users add column is_admin boolean not null default false;
 
 create index idx_users_email on Users (email);
 create index idx_users_country on Users (country_code);
