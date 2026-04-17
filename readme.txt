@@ -1,18 +1,14 @@
 ARHITECTURA SI DOCUMENTATIA PROIECTULUI: TRADEFLOW
 ================================================
 
-1. ARHITECTURA SISTEMULUI
--------------------------
-Proiectul TradeFlow este o aplicatie Web Full-Stack de tip Single Page Application (SPA), construita pe o stiva moderna de tehnologii:
+Proiectul TradeFlow este o aplicatie Web Full-Stack, construita pe o stiva moderna de tehnologii:
 
 - FRONTEND: React.js cu Vite pentru build-uri ultra-rapide. Utilizam TypeScript pentru siguranta tipurilor si Framer Motion pentru micro-animatii premium.
-- DESIGN: Kinetic Lens Design System - Un sistem de design original bazat pe glassmorphism, culori vibrante (neon) si mod intunecat (dark mode) nativ, implementat folosind Vanilla CSS si utilitare Tailwind pentru flexibilitate maxima.
+- DESIGN: Un sistem de design original bazat pe glassmorphism, culori vibrante (neon) si mod intunecat (dark mode) nativ, implementat folosind Vanilla CSS si utilitare Tailwind pentru flexibilitate maxima.
 - BACKEND: Node.js cu Express.js, oferind un API RESTful securizat prin limbaje de rate-limiting si Helmet.
 - BAZA DE DATE: PostgreSQL - Gestionare robusta a utilizatorilor, activelor si portofoliilor.
 - INTEGRARI: Alpaca API (date bursiere si executie), Finnhub API (știri si date de piată), Google Maps API (stilizat dark pentru harta sediului).
 
-2. CONTRIBUTII SI ORIGINALITATE (Punctaj Originalitate)
-------------------------------------------------------
 TradeFlow nu este un template generic; a fost construit cu atentie la detalii si functionalitati personalizate:
 
 - KINETIC LENS UI: Am dezvoltat un set de componente de tip "Glass Panel" cu efecte de blur si gradienti dinamici care se adapteaza contextului.
@@ -53,4 +49,3 @@ DESCRIERE MODULE PRINCIPALE:
 
 ================================================
 Produs dezvoltat pentru: Proiect Dezvoltare Aplicatii Web
-Echipa TradeFlow
